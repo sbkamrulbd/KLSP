@@ -1,0 +1,76 @@
+package com.example.backgroundvideorecorder
+
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.example.backgroundvideorecorder.databinding.ActivityMainBinding
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityMainBinding
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        binding.startButton.setOnClickListener {
+            if (hasRequiredPermissions()) {
+                binding.statusText.text = "Recording started"
+                Toast.makeText(this, "Recording started", Toast.LENGTH_SHORT).show()
+            } else {
+                requestRequiredPermissions()
+            }
+        }
+
+        binding.stopButton.setOnClickListener {
+            binding.statusText.text = "Recording stopped"
+            Toast.makeText(this, "Recording stopped", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun hasRequiredPermissions(): Boolean {
+        val cameraPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+        val audioPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+        return cameraPermission == PackageManager.PERMISSION_GRANTED &&
+            audioPermission == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestRequiredPermissions() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                Manifest.permission.CAMERA,
+                Manifest.permission.RECORD_AUDIO
+            ),
+            1001
+        )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == 1001) {
+            val granted = grantResults.isNotEmpty() &&
+                grantResults.all { it == PackageManager.PERMISSION_GRANTED }
+
+            if (granted) {
+                binding.statusText.text = "Permission granted"
+                Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show()
+            } else {
+                binding.statusText.text = "Permission required"
+                Toast.makeText(this, "Camera and mic permission required", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+}
